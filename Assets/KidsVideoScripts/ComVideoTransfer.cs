@@ -241,6 +241,14 @@ namespace KidsVideo
                 Destroy(data.uiObject);
                 mVideoUiElements.Remove(args.ConnectionId);
             }*/
+            if(args.ConnectionId == ConnectionId.INVALID)
+            {
+                comLargeVideo.gameObject.SetActive(false);
+            }
+            else
+            {
+                comSmallVideo.gameObject.SetActive(false);
+            }
         }
 
         /// <summary>
