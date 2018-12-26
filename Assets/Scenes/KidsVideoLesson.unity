@@ -208,7 +208,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 343578105}
-  - component: {fileID: 343578106}
   m_Layer: 5
   m_Name: video_template (1)
   m_TagString: Untagged
@@ -235,20 +234,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &343578106
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 343578104}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af3906baab02a2d4db9cc2cc8a06efca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  rawImage: {fileID: 167980986}
 --- !u!1 &364072229
 GameObject:
   m_ObjectHideFlags: 0
@@ -257,6 +242,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 364072230}
+  - component: {fileID: 364072231}
   m_Layer: 5
   m_Name: video_layout_other
   m_TagString: Untagged
@@ -283,6 +269,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 819.2, y: 460.8}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &364072231
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 364072229}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af3906baab02a2d4db9cc2cc8a06efca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  rawImage: {fileID: 167980986}
 --- !u!1 &414915271
 GameObject:
   m_ObjectHideFlags: 0
@@ -373,6 +373,8 @@ MonoBehaviour:
   compareNameFmt: au_video_room_{0}
   mSignalingUrl: wss://signaling.because-why-not.com/conferenceapp
   inputField: {fileID: 1231166238}
+  comLargeVideo: {fileID: 364072231}
+  comSmallVideo: {fileID: 1950010405}
 --- !u!1 &1071073121
 GameObject:
   m_ObjectHideFlags: 0
@@ -653,7 +655,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1420546352}
-  - component: {fileID: 1420546353}
   m_Layer: 5
   m_Name: video_template
   m_TagString: Untagged
@@ -680,20 +681,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1420546353
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 0}
-  m_GameObject: {fileID: 1420546351}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: af3906baab02a2d4db9cc2cc8a06efca, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  rawImage: {fileID: 1538317874}
 --- !u!1 &1538317871
 GameObject:
   m_ObjectHideFlags: 0
@@ -1100,6 +1087,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1950010404}
   - component: {fileID: 1950010406}
+  - component: {fileID: 1950010405}
   m_Layer: 5
   m_Name: video_layout
   m_TagString: Untagged
@@ -1126,6 +1114,20 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 300, y: 300}
   m_Pivot: {x: 1, y: 1}
+--- !u!114 &1950010405
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 1950010403}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: af3906baab02a2d4db9cc2cc8a06efca, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  rawImage: {fileID: 1538317874}
 --- !u!222 &1950010406
 CanvasRenderer:
   m_ObjectHideFlags: 0
