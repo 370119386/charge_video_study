@@ -16,12 +16,33 @@ namespace KidsVideo
         protected string compareNameFmt = @"au_video_room_{0}";
         [SerializeField]
         [Tooltip(@"信道服务器地址")]
-        protected string signalingUrl = @"ws://signaling.because-why-not.com/test";
+        //Note: The conference uses a different server setup which allows multiple clients listening on
+        //the same address and receive every connection listening.
+        protected string mSignalingUrl = "wss://signaling.because-why-not.com/conferenceapp";
         [SerializeField]
         protected InputField inputField = null;
         protected string address = string.Empty;
+        [Tooltip(@"防火墙穿透服务器")]
+        /// <summary>
+        /// ice server server. Used to get trough the firewall and establish direct connections.
+        /// </summary>
+        protected IceServer mIceServer = new IceServer("turn:turn.because-why-not.com:443", "testuser14", "pass14");
+
         protected NetworkConfig netConfig = null;
-        protected ICall caller = null;
+        /// <summary>
+        /// Call class handling all the functionality
+        /// </summary>
+        private ICall mCall;
+
+        /// <summary>
+        /// Configuration of audio / video functionality
+        /// </summary>
+        private MediaConfig config = new MediaConfig();
+
+        [SerializeField]
+        protected ComVideo comLargeVideo = null;
+        [SerializeField]
+        protected ComVideo comSmallVideo = null;
 
         protected void AddStepLog(string fmt,params object[] argv)
         {
@@ -33,153 +54,286 @@ namespace KidsVideo
 #endif
         }
 
-        public void StartAsTeacher()
+        protected void Start()
         {
-            AddStepLog("StartAsTeacher");
-            ConfigAsTeacher();
+            config.Video = true;
+            config.Audio = true;
         }
-
-        public void StartAsStudent()
+        
+        /// <summary>
+        /// The call object needs to be updated regularly to sync data received via webrtc with
+        /// unity. All events will be triggered during the update method in the unity main thread
+        /// to avoid multi threading errors
+        /// </summary>
+        private void Update()
         {
-            AddStepLog("StartAsStudent");
-        }
-
-        protected void ConfigAsTeacher()
-        {
-            AddStepLog("ConfigNet");
-
-            if (null == UnityCallFactory.Instance)
+            if (mCall != null)
             {
-                //if it is null something went terribly wrong
-                AddStepLog("UnityCallFactory missing. Platform not supported / dll's missing?");
-                return;
-            }
-
-            if(null == inputField)
-            {
-                AddStepLog("inputField has not been assigned ...");
-                return;
-            }
-
-            if(string.IsNullOrEmpty(inputField.text) || inputField.text.Length != 4)
-            {
-                AddStepLog("verify code is error need length = 4 such as 9527");
-                return;
-            }
-
-            netConfig = new NetworkConfig();
-            netConfig.SignalingUrl = signalingUrl;
-
-            //Set a stun server as ice server. We use a free google stun
-            //server here. (blocked in China)
-            //This is used by WebRTC to open a port in your router to allow 
-            //incoming connections. (not all routers support this though and
-            //some firewalls block it)
-            netConfig.IceServers.Add(new IceServer("stun:stun.l.google.com:19302"));
-
-            caller = UnityCallFactory.Instance.Create(netConfig);
-            if (caller == null)
-            {
-                //this might happen if our configuration is invalid e.g. broken stun server url
-                //(it won't notice if the stun server is offline though)
-                AddStepLog("Call init failed");
-                return;
-            }
-            AddStepLog("Call object created");
-
-            caller.CallEvent += reciever_cb;
-
-            AddStepLog("receiver setup");
-            //receiver doesn't use video and audio
-            MediaConfig mediaConf1 = new MediaConfig();
-            mediaConf1.Video = true;
-            mediaConf1.Audio = true;
-            mediaConf1.IdealWidth = 1280;
-            mediaConf1.IdealHeight = 720;
-
-            caller.Configure(mediaConf1);
-        }
-
-        private void reciever_cb(object sender, CallEventArgs args)
-        {
-            if (args.Type == CallEventType.ConfigurationComplete)
-            {
-                //STEP3: configuration completed -> try calling
-                Call(false);
-            }
-            else if (args.Type == CallEventType.ConfigurationFailed)
-            {
-                AddStepLog("Accessing audio / video failed");
-            }
-            else if (args.Type == CallEventType.ConnectionFailed)
-            {
-                AddStepLog("ConnectionFailed");
-            }
-            else if (args.Type == CallEventType.ListeningFailed)
-            {
-                AddStepLog("ListeningFailed");
-            }
-            else if (args.Type == CallEventType.CallAccepted)
-            {
-                //STEP5: We are connected
-                //mState = SimpleCallState.InCall;
-                AddStepLog("Connection established");
-            }
-            else if (args.Type == CallEventType.CallEnded)
-            {
-                //mState = SimpleCallState.Ended;
-                AddStepLog("Call ended.");
-            }
-            else if (args.Type == CallEventType.FrameUpdate)
-            {
-                //STEP6: until the end of the call we receive frames here
-                //Note that this is being called after Configure already for local frames even before
-                //a connection is established!
-                //This is triggered each video frame for local and remote video images
-                FrameUpdateEventArgs frameArgs = args as FrameUpdateEventArgs;
-
-
-                if (frameArgs.ConnectionId == ConnectionId.INVALID)
-                {
-                    /*
-                    bool textureCreated = UnityMediaHelper.UpdateRawImage(_LocalImage, frameArgs.Frame);
-                    if (textureCreated)
-                    {
-                        Texture2D tex = _LocalImage.texture as Texture2D;
-                        AddStepLog("Local Texture(s) created " + tex.width + "x" + tex.height + " format: " + frameArgs.Frame.Format);
-                    }*/
-
-                }
-                else
-                {
-                    /*
-                    bool textureCreated = UnityMediaHelper.UpdateRawImage(_RemoteImage, frameArgs.Frame);
-                    if (textureCreated)
-                    {
-                        Texture2D tex = _RemoteImage.texture as Texture2D;
-                        AddStepLog("Remote Texture(s) created " + tex.width + "x" + tex.height + " format: " + frameArgs.Frame.Format);
-                    }
-                    */
-                }
+                //update the call
+                mCall.Update();
             }
         }
 
-        private void Call(bool _Sender)
+        protected void OnDestroy()
         {
-            var address = string.Format(compareNameFmt, inputField.text);
+            CleanupCall();
+        }
 
-            if (_Sender)
+        private void Setup(bool useAudio = true, bool useVideo = true)
+        {
+            AddStepLog("Setting up ...");
+
+            //setup the server
+            NetworkConfig netConfig = new NetworkConfig();
+            netConfig.IceServers.Add(mIceServer);
+            netConfig.SignalingUrl = mSignalingUrl;
+            netConfig.IsConference = true;
+            mCall = UnityCallFactory.Instance.Create(netConfig);
+            if (mCall == null)
             {
-                //STEP4: Sender calls (outgoing connection) 
-                caller.Call(address);
+                AddStepLog("Failed to create the call");
+                return;
+            }
+
+            AddStepLog("Call created!");
+            mCall.CallEvent += Call_CallEvent;
+
+            //setup local video element
+            SetupVideoUi(ConnectionId.INVALID);
+            mCall.Configure(config);
+
+
+            //SetGuiState(false);
+        }
+
+        /// <summary>
+        /// Creates the connection specific data / ui
+        /// </summary>
+        /// <param name="id"></param>
+        private void SetupVideoUi(ConnectionId id)
+        {
+            AddStepLog("new connectionId coming id = {0}", id.id);
+            //create texture + ui element
+            if(id == ConnectionId.INVALID)
+            {
+                comLargeVideo.gameObject.SetActive(true);
+                comLargeVideo.rawImage.texture = comLargeVideo.defaultTexture;
             }
             else
             {
-                //STEP4: Receiver listens (waiting for incoming connection)
-                caller.Listen(address);
-                AddStepLog("reciever listen address = {0}", address);
+                comSmallVideo.gameObject.SetActive(true);
+                comSmallVideo.rawImage.texture = comSmallVideo.defaultTexture;
             }
-            //mState = SimpleCallState.Calling;
+            /*
+            VideoData vd = new VideoData();
+            vd.uiObject = Instantiate(uVideoPrefab);
+            vd.uiObject.transform.SetParent(uVideoLayout.transform, false);
+            vd.image = vd.uiObject.GetComponentInChildren<RawImage>();
+            vd.image.texture = uNoImgTexture;
+            mVideoUiElements[id] = vd;
+            */
+        }
+
+        /// <summary>
+        /// Handler of call events.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void Call_CallEvent(object sender, CallEventArgs e)
+        {
+            switch (e.Type)
+            {
+                case CallEventType.CallAccepted:
+                    //Outgoing call was successful or an incoming call arrived
+                    AddStepLog("Connection established");
+                    OnNewCall(e as CallAcceptedEventArgs);
+                    break;
+                case CallEventType.CallEnded:
+                    OnCallEnded(e as CallEndedEventArgs);
+                    break;
+                case CallEventType.ListeningFailed:
+                    AddStepLog("Failed to listen for incoming calls! Server might be down!");
+                    ResetCall();
+                    break;
+
+                case CallEventType.ConnectionFailed:
+                    {
+                        //this should be impossible to happen in conference mode!
+                        Byn.Media.ErrorEventArgs args = e as Byn.Media.ErrorEventArgs;
+                        AddStepLog("Error: " + args.ErrorMessage);
+                        Debug.LogError(args.ErrorMessage);
+                        ResetCall();
+                    }
+                    break;
+
+                case CallEventType.FrameUpdate:
+                    //new frame received from webrtc (either from local camera or network)
+                    FrameUpdateEventArgs frameargs = e as FrameUpdateEventArgs;
+                    UpdateFrame(frameargs.ConnectionId, frameargs.Frame);
+                    break;
+                case CallEventType.Message:
+                    {
+                        //text message received
+                        MessageEventArgs args = e as MessageEventArgs;
+                        AddStepLog(args.Content);
+                        break;
+                    }
+                case CallEventType.WaitForIncomingCall:
+                    {
+                        //the chat app will wait for another app to connect via the same string
+                        WaitForIncomingCallEventArgs args = e as WaitForIncomingCallEventArgs;
+                        AddStepLog("Waiting for incoming call address: " + args.Address);
+                        break;
+                    }
+            }
+
+        }
+
+        /// <summary>
+        /// Destroys the call object and shows the setup screen again.
+        /// Called after a call ends or an error occurred.
+        /// </summary>
+        private void ResetCall()
+        {
+            //delete all call object
+            /*
+            foreach (var v in mVideoUiElements)
+            {
+                Destroy(v.Value.uiObject);
+                Destroy(v.Value.texture);
+            }*/
+            //mVideoUiElements.Clear();
+            comLargeVideo.gameObject.SetActive(false);
+            comSmallVideo.gameObject.SetActive(false);
+            CleanupCall();
+            //change state
+            //SetGuiState(true);
+        }
+
+        /// <summary>
+        /// Destroys the call. Used if unity destroys the object or if a call
+        /// ended / failed due to an error.
+        /// 
+        /// </summary>
+        private void CleanupCall()
+        {
+            if (mCall != null)
+            {
+                AddStepLog("Destroying call!");
+                mCall.Dispose();
+                mCall = null;
+                AddStepLog("Call destroyed");
+            }
+        }
+
+        /// <summary>
+        /// User left. Cleanup connection specific data / ui
+        /// </summary>
+        /// <param name="args"></param>
+        private void OnCallEnded(CallEndedEventArgs args)
+        {
+            //delete call object
+            /*
+            VideoData data;
+            if (mVideoUiElements.TryGetValue(args.ConnectionId, out data))
+            {
+                Destroy(data.texture);
+                Destroy(data.uiObject);
+                mVideoUiElements.Remove(args.ConnectionId);
+            }*/
+        }
+
+        /// <summary>
+        /// Event triggers for a new incoming call
+        /// (in conference mode there is no difference between incoming / outgoing)
+        /// </summary>
+        /// <param name="args"></param>
+        private void OnNewCall(CallAcceptedEventArgs args)
+        {
+            SetupVideoUi(args.ConnectionId);
+        }
+
+        /// <summary>
+        /// Updates the texture based on the given frame update.
+        /// 
+        /// </summary>
+        /// <param name="tex"></param>
+        /// <param name="frame"></param>
+        private void UpdateTexture(ref Texture2D tex, IFrame frame)
+        {
+            //texture exists but has the wrong height /width? -> destroy it and set the value to null
+            if (tex != null && (tex.width != frame.Width || tex.height != frame.Height))
+            {
+                Texture2D.Destroy(tex);
+                tex = null;
+            }
+            //no texture? create a new one first
+            if (tex == null)
+            {
+                tex = new Texture2D(frame.Width, frame.Height, TextureFormat.RGBA32, false);
+                tex.wrapMode = TextureWrapMode.Clamp;
+            }
+            ///copy image data into the texture and apply
+            tex.LoadRawTextureData(frame.Buffer);
+            tex.Apply();
+        }
+
+        /// <summary>
+        /// Updates the frame for a connection id. If the id is new it will create a
+        /// visible image for it. The frame can be null for connections that
+        /// don't sent frames.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="frame"></param>
+        private void UpdateFrame(ConnectionId id, IFrame frame)
+        {
+            AddStepLog("UpdateFrame ...");
+            if(id == ConnectionId.INVALID)
+            {
+                UpdateTexture(ref comLargeVideo.texture, frame);
+                comLargeVideo.rawImage.texture = comLargeVideo.texture;
+            }
+            else
+            {
+                UpdateTexture(ref comSmallVideo.texture, frame);
+                comSmallVideo.rawImage.texture = comSmallVideo.texture;
+            }
+            //if (mVideoUiElements.ContainsKey(id))
+            //{
+            //    VideoData videoData = mVideoUiElements[id];
+            //    UpdateTexture(ref videoData.texture, frame);
+            //    videoData.image.texture = videoData.texture;
+            //}
+        }
+
+        /// <summary>
+        /// Join button pressed. Tries to join a room.
+        /// </summary>
+        public void JoinButtonPressed()
+        {
+            address = string.Format(compareNameFmt, inputField.text);
+            if(string.IsNullOrEmpty(inputField.text))
+            {
+                AddStepLog("VerifyCode Error : Now is empty");
+                return;
+            }
+
+            if(inputField.text.Length != 4)
+            {
+                AddStepLog("VerifyCode Length Error : Format Just Like 9527 4 numbers");
+                return;
+            }
+
+            if (mCall == null)
+            {
+                Setup();
+                //EnsureLength();
+                if(null != mCall)
+                {
+                    AddStepLog("Start Listen Address:[{0}]",address);
+                    mCall.Listen(address);
+                }
+            }
         }
     }
 }
