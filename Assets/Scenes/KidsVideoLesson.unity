@@ -164,7 +164,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_AspectMode: 3
-  m_AspectRatio: 1.7777778
+  m_AspectRatio: 1
 --- !u!114 &167980986
 MonoBehaviour:
   m_ObjectHideFlags: 0
