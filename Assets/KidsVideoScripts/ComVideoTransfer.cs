@@ -58,6 +58,8 @@ namespace KidsVideo
         {
             config.Format = FramePixelFormat.ABGR;
             config.VideoDeviceName = getFaceFrontCamera();
+            config.MaxFrameRate = 15;
+            config.MinFrameRate = 12;
             config.Video = true;
             config.Audio = true;
         }
