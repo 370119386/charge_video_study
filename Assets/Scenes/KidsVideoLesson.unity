@@ -281,7 +281,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  texture: {fileID: 0}
   rawImage: {fileID: 167980986}
 --- !u!1 &414915271
 GameObject:
@@ -1126,7 +1126,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
-  texture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
+  texture: {fileID: 0}
   rawImage: {fileID: 1538317874}
 --- !u!222 &1950010406
 CanvasRenderer:
