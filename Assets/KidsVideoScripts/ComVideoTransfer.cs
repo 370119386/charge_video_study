@@ -56,23 +56,27 @@ namespace KidsVideo
 
         protected void Start()
         {
+            config.Format = FramePixelFormat.ABGR;
+            config.VideoDeviceName = getFaceFrontCamera();
             config.Video = true;
             config.Audio = true;
-            config.VideoDeviceName = getFaceFrontCamera();
         }
 
         protected string getFaceFrontCamera()
         {
+            string deviceName = string.Empty;
             var devices = WebCamTexture.devices;
             for(int i = 0; i < devices.Length; ++i)
             {
                 var camera = devices[i];
                 if(camera.isFrontFacing)
                 {
-                    return camera.name;
+                    deviceName = camera.name;
+                    break;
                 }
             }
-            return string.Empty;
+            AddStepLog("deviceName = [{0}]", deviceName);
+            return deviceName;
         }
 
         /// <summary>
