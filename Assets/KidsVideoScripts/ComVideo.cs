@@ -16,5 +16,6 @@ namespace KidsVideo
         public Texture2D defaultTexture;
         public Texture2D texture;
         public RawImage rawImage;
+        public AspectRatioFitter radioFitter;
     }
 }

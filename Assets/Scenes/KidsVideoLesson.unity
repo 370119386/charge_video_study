@@ -163,7 +163,7 @@ MonoBehaviour:
   m_Script: {fileID: -1254083943, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AspectMode: 3
+  m_AspectMode: 2
   m_AspectRatio: 1
 --- !u!114 &167980986
 MonoBehaviour:
@@ -283,6 +283,7 @@ MonoBehaviour:
   defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
   texture: {fileID: 0}
   rawImage: {fileID: 167980986}
+  radioFitter: {fileID: 167980985}
 --- !u!1 &414915271
 GameObject:
   m_ObjectHideFlags: 0
@@ -731,7 +732,7 @@ MonoBehaviour:
   m_Script: {fileID: -1254083943, guid: f5f67c52d1564df4a8936ccd202a3bd8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_AspectMode: 3
+  m_AspectMode: 2
   m_AspectRatio: 1
 --- !u!114 &1538317874
 MonoBehaviour:
@@ -1128,6 +1129,7 @@ MonoBehaviour:
   defaultTexture: {fileID: 2800000, guid: 1a8ff9644969267459e0cee7b3d01af4, type: 3}
   texture: {fileID: 0}
   rawImage: {fileID: 1538317874}
+  radioFitter: {fileID: 1538317873}
 --- !u!222 &1950010406
 CanvasRenderer:
   m_ObjectHideFlags: 0

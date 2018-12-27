@@ -320,11 +320,13 @@ namespace KidsVideo
             if(id == ConnectionId.INVALID)
             {
                 UpdateTexture(ref comLargeVideo.texture, frame);
+                comLargeVideo.radioFitter.aspectRatio = frame.Width * 1.0f / frame.Height;
                 comLargeVideo.rawImage.texture = comLargeVideo.texture;
             }
             else
             {
                 UpdateTexture(ref comSmallVideo.texture, frame);
+                comLargeVideo.radioFitter.aspectRatio = frame.Width * 1.0f / frame.Height;
                 comSmallVideo.rawImage.texture = comSmallVideo.texture;
             }
             //if (mVideoUiElements.ContainsKey(id))
