@@ -5,3 +5,5 @@ Library/
 *.csproj
 *.suo
 obj/
+proj.ios/
+proj.android/
