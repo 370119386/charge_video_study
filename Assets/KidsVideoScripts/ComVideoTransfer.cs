@@ -58,8 +58,23 @@ namespace KidsVideo
         {
             config.Video = true;
             config.Audio = true;
+            config.VideoDeviceName = getFaceFrontCamera();
         }
-        
+
+        protected string getFaceFrontCamera()
+        {
+            var devices = WebCamTexture.devices;
+            for(int i = 0; i < devices.Length; ++i)
+            {
+                var camera = devices[i];
+                if(camera.isFrontFacing)
+                {
+                    return camera.name;
+                }
+            }
+            return string.Empty;
+        }
+
         /// <summary>
         /// The call object needs to be updated regularly to sync data received via webrtc with
         /// unity. All events will be triggered during the update method in the unity main thread
